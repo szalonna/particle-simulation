@@ -1,12 +1,17 @@
 {
   "name": "physics",
   "scripts": {
-    "server": "http-server -p 3000",
-    "tsc:watch": "tsc --watch"
+    "server": "http-server -p 3000 ./dist",
+    "tsc:watch": "tsc --watch",
+    "build": "tsc",
+    "deploy": "gh-pages -d dist"
   },
   "private": true,
   "dependencies": {
     "http-server": "^14.1.1",
     "typescript": "^5.7.3"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
   }
 }
