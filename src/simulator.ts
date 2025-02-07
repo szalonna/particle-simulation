@@ -306,7 +306,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   canvas.addEventListener("mousedown", (event) => {
-    console.log("mousedown");
     globalParams.mouseInteraction = true;
   });
 
@@ -319,10 +318,24 @@ document.addEventListener("DOMContentLoaded", () => {
       rule.distance = Math.round(Math.random() * 1_000);
       rule.attraction = Math.random() * 2 - 1;
     }
-    for (const ruleFolder of rulesFolder.children) {
-      for (const controller of ruleFolder.controllers) {
-        controller.updateDisplay();
-      }
+
+    updateDisplay(rulesFolder);
+  }
+
+  type Controller = {
+    updateDisplay: () => void;
+  };
+  type Folder = {
+    controllers: Controller[];
+    folders: Folder[];
+  };
+
+  function updateDisplay(folder: Folder) {
+    for (const controller of folder.controllers) {
+      controller.updateDisplay();
+    }
+    for (const subFolder of folder.folders) {
+      updateDisplay(subFolder);
     }
   }
 });
