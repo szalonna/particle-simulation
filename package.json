@@ -1,0 +1,12 @@
+{
+  "name": "physics",
+  "scripts": {
+    "server": "http-server -p 3000",
+    "tsc:watch": "tsc --watch"
+  },
+  "private": true,
+  "dependencies": {
+    "http-server": "^14.1.1",
+    "typescript": "^5.7.3"
+  }
+}
