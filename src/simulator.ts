@@ -54,7 +54,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const colorTheme = {
     background: `rgba(0, 0, 0, ${globalParams.backgroundOpacity})`,
-    groups: ["#FF18C8", "#1BEAFF", "#7BFF00"],
+    // groups: ["#FF18C8", "#1BEAFF", "#7BFF00"],
+    groups: {
+      [GROUPS[0]]: "#FF18C8",
+      [GROUPS[1]]: "#1BEAFF",
+      [GROUPS[2]]: "#7BFF00",
+    },
   };
 
   type ParticleGroup = (typeof GROUPS)[number];
@@ -96,10 +101,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const rulesFolder = controlGui.addFolder("Rules");
   rulesFolder.close();
 
-  for (const rule of rules) {
-    const ruleFolder = rulesFolder.addFolder(`${rule.who} -> ${rule.to}`);
-    ruleFolder.add(rule, "distance", 0, 1_000).name("Distance");
-    ruleFolder.add(rule, "attraction", -1, 1, 0.01).name("Attraction");
+  for (const group of GROUPS) {
+    const groupRules = rules.filter((r) => r.who === group);
+    const groupFolder = rulesFolder.addFolder(group);
+
+    groupFolder.addColor(colorTheme.groups, group).name("Color");
+
+    for (const rule of groupRules) {
+      const ruleFolder = groupFolder.addFolder(rule.to);
+      ruleFolder.add(rule, "distance", 0, 1_000).name("Distance");
+      ruleFolder.add(rule, "attraction", -1, 1, 0.01).name("Attraction");
+      ruleFolder.close();
+    }
+    groupFolder.close();
   }
 
   const mousePosition = {
@@ -246,8 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
     clearCanvas();
     for (const particle of particles) {
       if (particle.group !== "mouse") {
-        const groupIndex = GROUPS.indexOf(particle.group);
-        drawCircle(particle.x, particle.y, colorTheme.groups[groupIndex]);
+        drawCircle(particle.x, particle.y, colorTheme.groups[particle.group]);
       }
     }
     drawBoundingBox();
