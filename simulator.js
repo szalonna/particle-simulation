@@ -239,7 +239,6 @@ document.addEventListener("DOMContentLoaded", () => {
         mousePosition.y = event.clientY;
     });
     canvas.addEventListener("mousedown", (event) => {
-        console.log("mousedown");
         globalParams.mouseInteraction = true;
     });
     canvas.addEventListener("mouseup", (event) => {
@@ -250,10 +249,14 @@ document.addEventListener("DOMContentLoaded", () => {
             rule.distance = Math.round(Math.random() * 1_000);
             rule.attraction = Math.random() * 2 - 1;
         }
-        for (const ruleFolder of rulesFolder.children) {
-            for (const controller of ruleFolder.controllers) {
-                controller.updateDisplay();
-            }
+        updateDisplay(rulesFolder);
+    }
+    function updateDisplay(folder) {
+        for (const controller of folder.controllers) {
+            controller.updateDisplay();
+        }
+        for (const subFolder of folder.folders) {
+            updateDisplay(subFolder);
         }
     }
 });
