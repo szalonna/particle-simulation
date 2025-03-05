@@ -8,6 +8,12 @@ document.addEventListener("DOMContentLoaded", () => {
     margin: 0,
     mouseInteraction: false,
     backgroundOpacity: 1,
+
+    gravity: {
+      enabled: false,
+      force: 0.1,
+    },
+
     randomizeRules: () => {
       randomizeRules();
     },
@@ -44,6 +50,13 @@ document.addEventListener("DOMContentLoaded", () => {
     .add(globalParams, "randomizeRules")
     .name("Randomize rules");
 
+  globalSettingsFolder
+    .add(globalParams.gravity, "enabled")
+    .name("Gravity enabled");
+  globalSettingsFolder
+    .add(globalParams.gravity, "force", 0, 1, 0.01)
+    .name("Gravity force");
+
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
   const ctx = canvas.getContext("2d")!;
 
@@ -60,16 +73,16 @@ document.addEventListener("DOMContentLoaded", () => {
       [GROUPS[1]]: "#1BEAFF",
       [GROUPS[2]]: "#7BFF00",
     },
-  };
+  } as const;
 
   type ParticleGroup = (typeof GROUPS)[number];
-  type Group = ParticleGroup | "mouse";
+  type Group = ParticleGroup | "mouse" | "gravity";
 
   type Rule = {
     who: Group;
     to: Group;
     distance: number;
-    attraction: number;
+    attraction: number | (() => number);
   };
 
   type Particle = {
@@ -96,13 +109,21 @@ document.addEventListener("DOMContentLoaded", () => {
       distance: 100,
       attraction: 0,
     });
+    rules.push({
+      who,
+      to: "gravity",
+      distance: Number.MAX_VALUE,
+      attraction: () => globalParams.gravity.force,
+    });
   }
 
   const rulesFolder = controlGui.addFolder("Rules");
   rulesFolder.close();
 
   for (const group of GROUPS) {
-    const groupRules = rules.filter((r) => r.who === group);
+    const groupRules = rules.filter(
+      (r) => r.who === group && r.to !== "gravity"
+    );
     const groupFolder = rulesFolder.addFolder(group);
 
     groupFolder.addColor(colorTheme.groups, group).name("Color");
@@ -201,7 +222,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const [distance, dx, dy] = bounceDistance(p1, p2);
 
     if (distance > globalParams.radius * 2 && distance < rule.distance) {
-      const F = rule.attraction / distance;
+      let F = 0;
+      if (typeof rule.attraction === "function") {
+        F = rule.attraction();
+      } else {
+        F = rule.attraction;
+      }
+      F /= distance;
       fx = F * dx;
       fy = F * dy;
     } else if (distance < globalParams.radius * 2) {
@@ -212,8 +239,16 @@ document.addEventListener("DOMContentLoaded", () => {
       fx = -1 * F * dx;
       fy = -1 * F * dy;
 
-      p2.vx = -1 * (p2.vx + fx) * (1 - globalParams.friction / 2_000);
-      p2.vy = -1 * (p2.vy + fy) * (1 - globalParams.friction / 2_000);
+      p2.vx =
+        -1 *
+        (p2.vx + fx) *
+        (1 - globalParams.friction / 2_000) *
+        (Math.random() * 0.9 + 0.2);
+      p2.vy =
+        -1 *
+        (p2.vy + fy) *
+        (1 - globalParams.friction / 2_000) *
+        (Math.random() * 0.9 + 0.2);
     }
     p1.vx = (p1.vx + fx) * (1 - globalParams.friction / 2_000);
     p1.vy = (p1.vy + fy) * (1 - globalParams.friction / 2_000);
@@ -231,6 +266,15 @@ document.addEventListener("DOMContentLoaded", () => {
           continue;
         }
         applyAttraction(particle1, particle2);
+      }
+      if (globalParams.gravity.enabled) {
+        applyAttraction(particle1, {
+          x: particle1.x + Math.random() * 0.5 - 0.25,
+          y: canvas.height,
+          group: "gravity",
+          vx: 0,
+          vy: globalParams.gravity.force,
+        });
       }
       if (globalParams.mouseInteraction) {
         applyAttraction(particle1, {
@@ -257,16 +301,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function render() {
+    if (globalParams.isRunning) {
+      applyRules();
+    }
     clearCanvas();
     for (const particle of particles) {
-      if (particle.group !== "mouse") {
+      if (particle.group !== "mouse" && particle.group !== "gravity") {
         drawCircle(particle.x, particle.y, colorTheme.groups[particle.group]);
       }
     }
     drawBoundingBox();
-    if (globalParams.isRunning) {
-      applyRules();
-    }
     window.requestAnimationFrame(render);
   }
   render();
