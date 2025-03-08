@@ -1,17 +1,17 @@
 {
   "name": "physics",
   "scripts": {
-    "server": "http-server -p 3000 ./dist",
-    "tsc:watch": "tsc --watch",
-    "build": "tsc",
-    "deploy": "gh-pages -d dist"
+    "server": "parcel src/index.html",
+    "build": "parcel build src/index.html",
+    "deploy": "gh-pages -d dist",
+    "clean": "rm -fr dist"
   },
   "private": true,
-  "dependencies": {
-    "http-server": "^14.1.1",
-    "typescript": "^5.7.3"
-  },
   "devDependencies": {
-    "gh-pages": "^6.3.0"
+    "@parcel/config-default": "^2.13.3",
+    "@parcel/transformer-typescript-tsc": "^2.13.3",
+    "gh-pages": "^6.3.0",
+    "parcel": "^2.13.3",
+    "typescript": "^5.8.2"
   }
 }
